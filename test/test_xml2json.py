@@ -43,5 +43,23 @@ class SimplisticTest(unittest.TestCase):
         self.assertTrue("table" in json_data["root"])
         self.assertEqual(json_data["root"]["table"][0]["tr"]["td"] , ["Apples", "Bananas"])
 
+class JsonToXmlTest(unittest.TestCase):
+
+    def test_elements_with_numbers_and_bool(self):
+        json_data = { "root": {
+            "int": 1,
+            "float": 1.2,
+            "bool": True,
+        }}
+        xml2json.json2xml(json_data)
+
+    def test_attributes_with_numbers_and_bool(self):
+        json_data = { "root": {
+            "@int": 1,
+            "@float": 1.2,
+            "@bool": True,
+        }}
+        xml2json.json2xml(json_data)
+
 if __name__ == '__main__':
     unittest.main()

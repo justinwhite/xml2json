@@ -61,7 +61,7 @@ def elem_to_internal(elem, strip_ns=1, strip=1):
         elem_tag = strip_tag(elem.tag)
     else:
         for key, value in list(elem.attrib.items()):
-            d['@' + key] = value
+            d['@' + key] = from_string(value)
 
     # loop over subelements to merge them
     for subelem in elem:
@@ -71,7 +71,7 @@ def elem_to_internal(elem, strip_ns=1, strip=1):
         if strip_ns:
             tag = strip_tag(subelem.tag)
 
-        value = v[tag]
+        value = from_string(v[tag])
 
         try:
             # add to existing list for this tag
@@ -103,6 +103,24 @@ def elem_to_internal(elem, strip_ns=1, strip=1):
         d = text or None
     return {elem_tag: d}
 
+def from_string(value):
+    types = [
+       int,
+       float,
+       bool_from_str,
+    ]
+    for typ in types:
+        try:
+            return typ(value)
+        except:
+            pass
+    return value
+
+def bool_from_str(x):
+    x = x.lower()
+    if not x in [ "true", "false" ]:
+        raise TypeError()
+    return x == "true"
 
 def internal_to_elem(pfsh, factory=ET.Element):
 
@@ -125,7 +143,7 @@ def internal_to_elem(pfsh, factory=ET.Element):
     if isinstance(value, dict):
         for k, v in list(value.items()):
             if k[:1] == "@":
-                attribs[k[1:]] = v
+                attribs[k[1:]] = str(v)
             elif k == "#text":
                 text = v
             elif k == "#tail":
@@ -134,9 +152,9 @@ def internal_to_elem(pfsh, factory=ET.Element):
                 for v2 in v:
                     sublist.append(internal_to_elem({k: v2}, factory=factory))
             else:
-                sublist.append(internal_to_elem({k: v}, factory=factory))
+                sublist.append(internal_to_elem({k: xstr(v)}, factory=factory))
     else:
-        text = value
+        text = str(value)
     e = factory(tag, attribs)
     for sub in sublist:
         e.append(sub)
@@ -144,6 +162,8 @@ def internal_to_elem(pfsh, factory=ET.Element):
     e.tail = tail
     return e
 
+def xstr(v):
+    return str(v).lower() if type(v) == type(True) else v
 
 def elem2json(elem, options, strip_ns=1, strip=1):
 
